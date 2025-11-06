@@ -21,6 +21,11 @@ docker compose up -d
 2. Seleccionar **Otras ventanas**
 3. Hacer clic en **Consola del Administrador de Paquetes**
 
+# Nota
+```powershell
+Sino hay carpeta "mssql_data", crearla
+```
+
 ## Paso 5: Aplicar la Migración Inicial
 En la Consola del Administrador de Paquetes, ejecutar:
 ```powershell
