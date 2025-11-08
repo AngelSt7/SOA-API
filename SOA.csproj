@@ -19,8 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="features\property\admin\" />
+    <Folder Include="features\location\location\" />
     <Folder Include="features\property\public\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="features\location\respository\LocationRepository.cs" />
   </ItemGroup>
 
 </Project>

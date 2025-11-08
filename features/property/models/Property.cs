@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using SOA.features.auth.models;
-using SOA.features.location.models;
 using SOA.features.properties.enums;
 using SOA.features.image.models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using SOA.features.location.models;
 
 namespace SOA.features.properties.models
 {

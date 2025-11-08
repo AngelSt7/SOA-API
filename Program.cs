@@ -4,7 +4,12 @@ using Microsoft.IdentityModel.Tokens;
 using SOA.features.auth.repositories;
 using SOA.features.auth.services;
 using SOA.features.auth.utils;
+using SOA.features.property.admin.repository;
+using SOA.features.property.admin.services;
+using SOA.Features.Location.Repository;
+using SOA.Features.Location.Services;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,12 +17,24 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(x =>
+    {
+        x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        x.JsonSerializerOptions.WriteIndented = true;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddScoped<LocationService>();
+builder.Services.AddScoped<LocationRepository>();
+
+builder.Services.AddScoped<PropertyAdminRepository>();
+builder.Services.AddScoped<PropertyAdminService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<SOA.features.auth.utils.UserContextService>();
@@ -60,7 +77,6 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
-
 
 if (app.Environment.IsDevelopment())
 {

@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace SOA.features.location.models
 {
-    [Table("provinces")]
+    [Table("departments")]
     [Index(nameof(Slug), IsUnique = true)]
-    public class Province
+    public class Department
     {
         [Key]
         public Guid Id { get; set; }
@@ -17,18 +17,12 @@ namespace SOA.features.location.models
         [Required, MaxLength(120)]
         public string Slug { get; set; }
 
-        [Column("department_id")]
-        public Guid DepartmentId { get; set; }
-
-        [ForeignKey(nameof(DepartmentId))]
-        public Department Department { get; set; }
-
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
-        public ICollection<District> Districts { get; set; } = new List<District>();
+        public ICollection<Province> Provinces { get; set; } = new List<Province>();
     }
 }
