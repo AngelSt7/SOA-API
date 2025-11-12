@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <Folder Include="features\location\location\" />
-    <Folder Include="features\property\public\" />
   </ItemGroup>
 
   <ItemGroup>
