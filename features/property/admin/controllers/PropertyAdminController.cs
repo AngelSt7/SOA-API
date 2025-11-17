@@ -1,55 +1,64 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SOA.features.auth.utils;
-using SOA.features.property.admin.dtos;
+using SOA.features.property.admin.dtos.request;
+using SOA.features.property.admin.dtos.response;
 using SOA.features.property.admin.services;
 
 namespace SOA.features.property.admin.controllers
 {
     [Route("api/property-admin")]
     [ApiController]
-    public class PropertyAdminController : ControllerBase
+    public class PropertyAdminController(UserContextService userContext, PropertyAdminService service) : ControllerBase
     {
-        private readonly UserContextService _userContext;
-        private readonly PropertyAdminService _service;
+        private readonly UserContextService _userContext = userContext;
+        private readonly PropertyAdminService _service = service;
 
-        public PropertyAdminController(UserContextService userContext, PropertyAdminService service)
+
+        [Authorize]
+        [HttpGet()]
+        public async Task<PropertyAdminListResponseDto> Filter([FromQuery] PropertyQueryDto query)
         {
-            _userContext = userContext;
-            _service = service;
+            var userId = _userContext.GetUserId();
+            return await _service.FilterAsync(query, (Guid)userId);
+        }
+
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<PropertySingleResponseDto> GetOne([FromRoute] string id)
+        {
+            if (!Guid.TryParse(id, out var guid)) throw new ArgumentException("El id no es un GUID válido.");
+            var userId = _userContext.GetUserId();
+            return await _service.FindOneAsync(guid, (Guid)userId);
+        }
+
+        [Authorize]
+        [HttpPatch("{id}")]
+        public async Task<ActionPropertyResponse> Update(
+            [FromRoute] string id,
+            [FromBody] UpdatePropertyAdminDto dto)
+        {
+            if (!Guid.TryParse(id, out var guid)) throw new ArgumentException("El id no es un GUID válido.");
+            var userId = _userContext.GetUserId();
+            return await _service.UpdateAsync(guid, dto, (Guid)userId);
+        }
+
+        [Authorize]
+        [HttpPatch("status/{id}")]
+        public async Task<object> changeStatus(
+        [FromRoute] string id)
+            {
+            if (!Guid.TryParse(id, out var guid)) throw new ArgumentException("El id no es un GUID válido.");
+            var userId = _userContext.GetUserId();
+            return await _service.ChangeStatus(guid, (Guid)userId);
         }
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreatePropertyAdminDto dto)
+        public async Task<ActionPropertyResponse> Create([FromBody] CreatePropertyAdminDto dto)
         {
-            try
-            {
-                var userId = _userContext.GetUserId();
-
-                var result = await _service.CreateAsync(dto, (Guid)userId);
-
-                return Ok(new
-                {
-                    message = "Propiedad creada correctamente",
-                    data = result
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    message = "Ocurrió un error inesperado en el servidor",
-                    error = ex.Message
-                });
-            }
+            var userId = _userContext.GetUserId();
+            return await _service.CreateAsync(dto, (Guid)userId);
         }
 
     }

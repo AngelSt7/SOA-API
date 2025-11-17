@@ -4,6 +4,7 @@ using SOA.features.auth.models;
 using SOA.features.auth.repositories;
 using SOA.features.location.models;
 using SOA.features.seed.data;
+using SOA.features.services.models;
 using System.Text.RegularExpressions;
 
 namespace SOA.features.seed
@@ -21,7 +22,7 @@ namespace SOA.features.seed
             _context = context;
         }
 
-        [HttpPost("")]
+        [HttpPost]
         public async Task<IActionResult> Seed()
         {
             try
@@ -61,7 +62,7 @@ namespace SOA.features.seed
 
         private async Task SeedUsers()
         {
-            var users = new List<SOA.features.auth.models.User>
+            var users = new List<User>
             {
                 new()
                 {
@@ -170,7 +171,7 @@ namespace SOA.features.seed
 
         private async Task SeedServices()
         {
-            var services = new List<SOA.features.services.models.Service>
+            var services = new List<Service>
             {
                 new() { Id = Guid.NewGuid(), ServiceName = "Electricidad", Slug = "electricidad" },
                 new() { Id = Guid.NewGuid(), ServiceName = "Agua Potable", Slug = "agua-potable" },
@@ -218,9 +219,6 @@ namespace SOA.features.seed
             text = Regex.Replace(text, @"-+", "-");
             return text;
         }
-
-
-
         private async Task SeedProperties()
         {
             var userIds = await GetAllUserIds();
@@ -263,6 +261,30 @@ namespace SOA.features.seed
                 await _context.Properties.AddAsync(property);
                 await _context.SaveChangesAsync();
 
+                var residentialProperty = new SOA.features.properties.models.ResidentialProperty
+                {
+                    Id = property.Id, 
+                    Bedrooms = data.Bedrooms,
+                    Bathrooms = data.Bathrooms,
+                    Area = data.Area,
+                    Furnished = data.Furnished,
+                    HasTerrace = data.HasTerrace
+                };
+
+                await _context.ResidentialProperties.AddAsync(residentialProperty);
+                await _context.SaveChangesAsync();
+
+                var commercialProperty = new SOA.features.properties.models.CommercialProperty
+                {
+                    Id = property.Id, 
+                    Floor = data.Floor,
+                    HasParking = data.HasParking,
+                    ParkingSpaces = data.ParkingSpaces
+                };
+
+                await _context.CommercialProperties.AddAsync(commercialProperty);
+                await _context.SaveChangesAsync();
+
                 var randomServices = serviceIds.OrderBy(_ => Guid.NewGuid()).Take(4).ToList();
                 var serviceLinks = randomServices.Select(sid => new SOA.features.properties.models.ServiceToProperty
                 {
@@ -275,6 +297,5 @@ namespace SOA.features.seed
                 await _context.SaveChangesAsync();
             }
         }
-
     }
 }

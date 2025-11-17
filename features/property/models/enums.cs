@@ -6,6 +6,7 @@
         GOOGLE,
         FACEBOOK
     }
+    
     public enum PropertyType
     {
         SALE,

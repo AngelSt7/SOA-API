@@ -1,62 +1,107 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.IdentityModel.Tokens;
+﻿
 using SOA.features.auth.dtos;
+using SOA.features.auth.dtos.request;
+using SOA.features.auth.dtos.response;
 using SOA.features.auth.models;
 using SOA.features.auth.repositories;
 
 namespace SOA.features.auth.services
 {
-    public class AuthService
+    public class AuthService(
+            UserRepository userRepository,
+            JwtService jwtService,
+            CookieService cookieService,
+            TokenService tokenService,
+            EmailService emailService,
+            TokenRepository tokenRepository
+        )
     {
-        private readonly UserRepository _userRepository;
-        private readonly IConfiguration _config;
+        private readonly UserRepository _userRepository = userRepository;
+        private readonly JwtService _jwtService = jwtService;
+        private readonly CookieService _cookieService = cookieService;
+        private readonly TokenService _tokenService = tokenService;
+        private readonly EmailService _emailService = emailService;
+        private readonly TokenRepository _tokenRepository = tokenRepository;
 
-        public AuthService(UserRepository userRepository, IConfiguration config)
-        {
-            _userRepository = userRepository;
-            _config = config;
-        }
-
-        // Buscar usuario por email
         public async Task<User?> FindEmailAsync(string email)
         {
             return await _userRepository.FindByEmailAsync(email);
         }
 
-        // Crear usuario
-        public async Task<User> CreateUserAsync(CreateUserDto dto)
+        public async Task<ResponseAuth> CreateUserAsync(CreateUserDto dto)
         {
-            var existingUser = await FindEmailAsync(dto.Email);
-            if (existingUser != null)
-                throw new InvalidOperationException("El correo ya está registrado.");
+            var userDB = await FindEmailAsync(dto.Email);
+            if (userDB != null) throw new InvalidOperationException("El correo ya está registrado.");
 
-            var newUser = new User
+            var newUser = GenerateInstance.user(dto);
+
+            var created = await _userRepository.CreateAsync(newUser);
+
+            var token = _tokenService.get();
+
+            var tokenInstance = GenerateInstance.token(token, created.Id);
+            await _tokenRepository.UpsertAsync(token, tokenInstance);
+
+            await _emailService.SendEmailAsync(
+                created.Email, "Confirma tu cuenta - SOA App", _emailService.GetConfirmationEmailBody(token), token
+            );
+            var userInfo = GenerateInstance.userResponseInfo(created);
+
+            return new ResponseAuth
             {
-                Name = dto.Name,
-                Lastname = dto.Lastname,
-                Email = dto.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Phone = dto.Phone,
-                BirthDate = dto.BirthDate,
-                Confirmed = true,
+                Message = "Cuenta creada exitosamente, revisa tu correo para confirmar tu cuenta",
+                Info = userInfo
             };
-
-            return await _userRepository.CreateAsync(newUser);
         }
 
-        public async Task<string> LoginAsync(LoginUserDto dto)
+        public async Task<ResponseAuth> LoginAsync(LoginUserDto dto)
         {
-            var user = await _userRepository.FindByEmailAsync(dto.Email);
+            var user = await FindEmailAsync(dto.Email);
+            if (user == null) throw new KeyNotFoundException("El usuario no existe.");
 
-            if (user == null)
-                throw new KeyNotFoundException("El usuario no existe.");
+            if (!user.Confirmed) throw new UnauthorizedAccessException("Por favor, confirma tu cuenta antes de iniciar sesión.");
 
-            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-                throw new UnauthorizedAccessException("Email o contraseña incorrectos.");
+            bool match = BCrypt.Net.BCrypt.Verify(dto.Password, user.Password);
+            if (!match) throw new UnauthorizedAccessException("Email o contraseña incorrectos.");
 
-            return GenerateJwtToken(user);
+            var token = _jwtService.GenerateJwtToken(user);
+            _cookieService.SetTokenCookie(token, double.Parse("999999999"));
+
+            var userInfo = GenerateInstance.userResponseInfo(user);
+            return new ResponseAuth
+            {
+                Message = "Inicio de sesión exitoso",
+                Info = userInfo
+            };
+        }
+
+        public async Task<ResponseAuth> ConfirmAccountAsync(ConfirmAccountDto dto)
+        {
+            var userDB = await FindEmailAsync(dto.Email);
+            if (userDB is null) throw new Exception("El usuario no existe");
+
+            var tokenDb = await _tokenRepository.FindByUserIdAsync(userDB.Id);
+            if (tokenDb is null)
+                throw new Exception("No existe un token asignado a este usuario");
+
+            if (tokenDb.TokenValue.ToString() != dto.Token)
+                throw new Exception("Token inválido");
+
+            if (tokenDb.ExpiresAt < DateTime.UtcNow)
+            {
+                await _tokenRepository.DeleteByIdAsync(tokenDb.Id);
+                throw new Exception("El token ha expirado, solicite uno nuevo");
+            }
+
+            userDB.Confirmed = true;
+            await _userRepository.UpdateAsync(userDB);
+            await _tokenRepository.DeleteByIdAsync(tokenDb.Id);
+
+            return new ResponseAuth
+            {
+                Message = "Cuenta confirmada correctamente",
+                Info = GenerateInstance.userResponseInfo(userDB)
+            };
         }
 
 
@@ -74,34 +119,9 @@ namespace SOA.features.auth.services
                 user.Lastname,
                 user.Email,
                 user.Phone,
-                user.BirthDate,
                 user.Confirmed
             };
         }
 
-        private string GenerateJwtToken(User user)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email)
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(double.Parse(_config["Jwt:ExpireMinutes"])),
-                Issuer = _config["Jwt:Issuer"],
-                Audience = _config["Jwt:Audience"],
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature
-                )
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
     }
 }

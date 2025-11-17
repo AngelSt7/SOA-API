@@ -28,7 +28,6 @@ namespace SOA.Features.Location.Repository
                 .Select(d => new { d.Id, d.Name, d.Slug, d.ProvinceId })
                 .ToListAsync();
 
-            // convertir cada lista a dynamic
             return new List<dynamic>
             {
                 departments.Cast<dynamic>().ToList(),

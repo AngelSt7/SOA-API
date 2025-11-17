@@ -1,7 +1,7 @@
 ﻿using SOA.features.properties.enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace SOA.features.property.admin.dtos
+namespace SOA.features.property.admin.dtos.request
 {
     public class CreatePropertyAdminDto
     {
@@ -81,7 +81,6 @@ namespace SOA.features.property.admin.dtos
         [RegularExpression(@"^9[0-9]{8}$", ErrorMessage = "El teléfono debe tener 9 dígitos y comenzar con 9.")]
         public string Phone { get; set; } = string.Empty;
 
-        // ✅ Nuevo campo: lista de servicios relacionados
         [Required(ErrorMessage = "Debe incluir al menos un servicio.")]
         [MinLength(1, ErrorMessage = "Debe incluir al menos un servicio.")]
         public List<Guid> ServicesId { get; set; } = new();

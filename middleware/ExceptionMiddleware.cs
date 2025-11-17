@@ -1,0 +1,51 @@
+﻿namespace SOA.middleware
+{
+    public class ExceptionMiddleware
+    {
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionMiddleware> _logger;
+
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+        {
+            _next = next;
+            _logger = logger;
+        }
+
+        public async Task InvokeAsync(HttpContext context)
+        {
+            try
+            {
+                await _next(context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ocurrió un error");
+                await HandleExceptionAsync(context, ex);
+            }
+        }
+
+        private Task HandleExceptionAsync(HttpContext context, Exception ex)
+        {
+            context.Response.ContentType = "application/json";
+
+            int statusCode = ex switch
+            {
+                KeyNotFoundException => StatusCodes.Status404NotFound,
+                UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+                InvalidOperationException => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status500InternalServerError
+            };
+
+            context.Response.StatusCode = statusCode;
+
+            var result = new
+            {
+                Message = ex.Message,
+                StatusCode = statusCode
+            };
+
+            return context.Response.WriteAsJsonAsync(result);
+        }
+    }
+
+}

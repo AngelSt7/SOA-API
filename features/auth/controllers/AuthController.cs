@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SOA.features.auth.dtos;
+using SOA.features.auth.dtos.request;
+using SOA.features.auth.dtos.response;
 using SOA.features.auth.services;
 using SOA.features.auth.utils;
 
@@ -11,63 +13,30 @@ namespace SOA.features.auth.controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
-        private readonly IConfiguration _config;
         private readonly UserContextService _userContext;
 
-        public AuthController(AuthService authService, IConfiguration config, UserContextService userContext)
+        public AuthController(AuthService authService, UserContextService userContext)
         {
             _authService = authService;
-            _config = config;
             _userContext = userContext;
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginUserDto dto)
+        public async Task<ResponseAuth> Login([FromBody] LoginUserDto dto)
         {
-            try
-            {
-                var jwt = await _authService.LoginAsync(dto);
+            return await _authService.LoginAsync(dto); ;
+        }
 
-                Response.Cookies.Append("TOKEN", jwt, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = Request.IsHttps,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddMinutes(double.Parse(_config["Jwt:ExpireMinutes"]))
-                });
-
-                return Ok(new { Message = "Login correcto" });
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { Message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { Message = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new { Message = "Error interno del servidor." });
-            }
+        [HttpPost("confirm-account")]
+        public async Task<ResponseAuth> ConfirmAccount([FromBody] ConfirmAccountDto dto)
+        {
+            return await _authService.ConfirmAccountAsync(dto); ;
         }
 
         [HttpPost("create-account")]
-        public async Task<IActionResult> RegisterUser([FromBody] CreateUserDto dto)
+        public async Task<ResponseAuth> RegisterUser([FromBody] CreateUserDto dto)
         {
-            try
-            {
-                var created = await _authService.CreateUserAsync(dto);
-                return Ok(new { Message = "Usuario creado correctamente", User = created });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(new { Message = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, new { Message = "Error interno del servidor." });
-            }
+           return await _authService.CreateUserAsync(dto);
         }
 
         [Authorize]

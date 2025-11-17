@@ -38,7 +38,5 @@ namespace SOA.features.property.shared.controllers
             return Ok(types);
         }
 
-
-
     }
 }

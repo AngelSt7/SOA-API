@@ -6,8 +6,12 @@ using SOA.features.auth.services;
 using SOA.features.auth.utils;
 using SOA.features.property.admin.repository;
 using SOA.features.property.admin.services;
+using SOA.features.property.client.repository;
+using SOA.features.property.client.services;
+using SOA.features.shared.services;
 using SOA.Features.Location.Repository;
 using SOA.Features.Location.Services;
+using SOA.middleware;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -18,24 +22,33 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddControllers()
-    .AddJsonOptions(x =>
+    .AddJsonOptions(opt =>
     {
-        x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        x.JsonSerializerOptions.WriteIndented = true;
+        opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        opt.JsonSerializerOptions.WriteIndented = true;
+        opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<CookieService>();
+builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<PaginationService>();
 builder.Services.AddScoped<AuthService>();
-
+builder.Services.AddScoped<QueryFilterService>();
+builder.Services.AddScoped<ClientQueryFilterService>();
 builder.Services.AddScoped<LocationService>();
 builder.Services.AddScoped<LocationRepository>();
-
+builder.Services.AddScoped<TokenRepository>();
+builder.Services.AddSingleton<EmailService>();
+builder.Services.AddScoped<TokenService>(); 
+builder.Services.AddScoped<PropertyClientService>();
 builder.Services.AddScoped<PropertyAdminRepository>();
 builder.Services.AddScoped<PropertyAdminService>();
 
+builder.Services.AddScoped<PropertyClientRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<SOA.features.auth.utils.UserContextService>();
 builder.Services.AddScoped<UserContextService>();
@@ -85,7 +98,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
