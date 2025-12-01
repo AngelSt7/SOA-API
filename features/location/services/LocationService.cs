@@ -28,30 +28,23 @@ namespace SOA.Features.Location.Services
 
             var provincesWithDepartment = provinces.Select(p =>
             {
-                var dept = departments.FirstOrDefault(d => d.Id == p.DepartmentId);
-                var deptName = dept != null ? dept.Name : "";
-                var deptSlug = dept != null ? dept.Slug : "";
 
                 return new
                 {
                     Id = p.Id,
-                    Name = $"{deptName}, {p.Name}",
-                    Slug = $"{deptSlug}-{p.Slug}",
+                    Name = $"Lima, {p.Name}",
+                    Slug = p.Slug,
                     Type = "PROVINCE"
                 };
             }).ToList();
 
             var districtsFull = districts.Select(d =>
             {
-                var prov = provincesWithDepartment.FirstOrDefault(p => p.Id == d.ProvinceId);
-                var provName = prov != null ? prov.Name : "";
-                var provSlug = prov != null ? prov.Slug : "";
-
                 return new
                 {
                     Id = d.Id,
-                    Name = $"{provName}, {d.Name}",
-                    Slug = $"{provSlug}-{d.Slug}",
+                    Name = $"Lima, Lima, {d.Name}",
+                    Slug = $"{d.Slug}",
                     Type = "DISTRICT"
                 };
             }).ToList();

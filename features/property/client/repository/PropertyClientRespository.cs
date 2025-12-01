@@ -25,10 +25,10 @@ namespace SOA.features.property.client.repository
                 .Include(p => p.Images);
         }
 
-        public async Task<PropertyClientSingleResponseDto?> FindOneAsync(Guid id)
+        public async Task<PropertyClientSingleResponseDto?> FindOneAsync(String id)
         {
             return await _context.Properties
-                .Where(p => p.Id == id)
+                .Where(p => p.Id.ToString().EndsWith(id))
                 .Select(p => new PropertyClientSingleResponseDto
                 {
                     Id = p.Id,

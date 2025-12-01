@@ -4,12 +4,14 @@ namespace SOA.features.property.client.dto.request
 {
     public class PropertyClientQueryDto
     {
+        
+        public PropertyCategory? PropertyCategory { get; set; }
+        public PropertyType? PropertyType { get; set; }
+        public Currency? Currency { get; set; }
+
         // Precio
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
-        public Currency? Currency { get; set; }
-        public PropertyCategory? PropertyCategory { get; set; }
-        public PropertyType? PropertyType { get; set; }
 
         // Dormitorios y baños
         public int? MinBedrooms { get; set; }

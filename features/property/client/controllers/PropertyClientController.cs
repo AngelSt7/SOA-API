@@ -24,13 +24,11 @@ namespace SOA.features.property.client.controllers
             return await _propertyService.FilterAsync(query);
         }
 
-        [Authorize]
         [HttpGet("{id}")]
         public async Task<PropertyClientSingleResponseDto> GetOne([FromRoute] string id)
         {
-            if (!Guid.TryParse(id, out var guid))
-                throw new ArgumentException("El id no es un GUID válido.");
-            return await _propertyService.GetOne(guid);
+
+            return await _propertyService.GetOne(id);
         }
     }
 }

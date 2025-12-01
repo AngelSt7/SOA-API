@@ -71,6 +71,7 @@ namespace SOA.features.auth.services
             return new ResponseAuth
             {
                 Message = "Inicio de sesión exitoso",
+                Token = token,
                 Info = userInfo
             };
         }

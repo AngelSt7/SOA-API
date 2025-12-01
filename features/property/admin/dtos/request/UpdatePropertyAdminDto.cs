@@ -34,11 +34,7 @@ namespace SOA.features.property.admin.dtos.request
         public string? Description { get; set; }
 
         [Required]
-        public Guid? DepartmentId { get; set; }
-        [Required]
-        public Guid? ProvinceId { get; set; }
-        [Required]
-        public Guid? DistrictId { get; set; }
+        public Guid LocationId { get; set; }
 
         [Required]
         [Range(1, 10)]

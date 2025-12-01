@@ -16,23 +16,26 @@ namespace SOA.Features.Location.Repository
 
         public async Task<List<dynamic>> GetAllAsync()
         {
-            var departments = await _context.Departments
-                .Select(d => new { d.Id, d.Name, d.Slug })
+            var deparmentsII = await _context.Locations
+                .Select(l => new { l.Id, l.Department.Name, l.Type, l.Slug })
+                .Where(l => l.Type == "DEPARTMENT")
+                .ToListAsync();
+                
+            var provincesII = await _context.Locations
+                .Select(l => new { l.Id, l.Province.Name, l.Type, l.Slug })
+                .Where(l => l.Type == "PROVINCE")
                 .ToListAsync();
 
-            var provinces = await _context.Provinces
-                .Select(p => new { p.Id, p.Name, p.Slug, p.DepartmentId })
-                .ToListAsync();
-
-            var districts = await _context.Districts
-                .Select(d => new { d.Id, d.Name, d.Slug, d.ProvinceId })
+            var districtsII = await _context.Locations
+                .Select(l => new { l.Id, l.District.Name, l.Type, l.Slug })
+                .Where(l => l.Type == "DISTRICT")
                 .ToListAsync();
 
             return new List<dynamic>
             {
-                departments.Cast<dynamic>().ToList(),
-                provinces.Cast<dynamic>().ToList(),
-                districts.Cast<dynamic>().ToList()
+                deparmentsII.Cast<dynamic>().ToList(),
+                provincesII.Cast<dynamic>().ToList(),
+                districtsII.Cast<dynamic>().ToList()
             };
         }
 

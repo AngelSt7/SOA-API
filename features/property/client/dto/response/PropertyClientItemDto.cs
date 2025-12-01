@@ -25,7 +25,7 @@ namespace SOA.features.property.client.dto.response
         public int ParkingSpaces { get; set; }
 
         public string FullSlug =>
-            $"/inmueble/clasificado/{Department}-{District}-{Slug}"
+            $"/inmueble/clasificado/{Department}-{District}-{Slug}-{Id.ToString().Split('-')[4]}"
                 .ToLower()
                 .Replace(" ", "-")
                 .Replace("á", "a")

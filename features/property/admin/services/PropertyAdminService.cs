@@ -17,7 +17,6 @@ namespace SOA.features.property.admin.services
         )
     {
         private readonly PropertyAdminRepository _repository = repository;
-        private readonly LocationService _locationService = locationService;
         private readonly QueryFilterService _queryFilterService = queryFilterService;
         private readonly PaginationService _paginationService = paginationService;
 
@@ -59,13 +58,8 @@ namespace SOA.features.property.admin.services
             if (property == null) throw new KeyNotFoundException("Propiedad no encontrada");
 
             var slug = GenerateSlug(dto.Name ?? property.Name);
-            var locationId = await _locationService.ResolveLocationAsync(
-                dto.DepartmentId ?? property.DepartmentId,
-                dto.ProvinceId ?? property.ProvinceId,
-                dto.DistrictId ?? property.DistrictId
-            );
 
-            var preparedProperty = GenerateInstance.PrepareProperty(property, dto, slug, (Guid)locationId);
+            var preparedProperty = GenerateInstance.PrepareProperty(property, dto, slug, dto.LocationId);
 
             var updatedProperty = await _repository.UpdateAsync(preparedProperty, userId);
 
@@ -88,9 +82,8 @@ namespace SOA.features.property.admin.services
 
         public async Task<ActionPropertyResponse> CreateAsync(CreatePropertyAdminDto dto, Guid userId)
         {
-            var locationId = await _locationService.ResolveLocationAsync(dto.DepartmentId, dto.ProvinceId, dto.DistrictId);
             var slug = GenerateSlug(dto.Name);
-            var createdProperty = await _repository.CreateAsync(dto, userId, locationId.Value, slug);
+            var createdProperty = await _repository.CreateAsync(dto, userId, dto.LocationId, slug);
             return new ActionPropertyResponse()
             {
                 Message = "Propiedad creada correctamente",

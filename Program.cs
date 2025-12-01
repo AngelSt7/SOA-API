@@ -17,10 +17,16 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// --------------------------------------
+// DATABASE
+// --------------------------------------
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+// --------------------------------------
+// JSON OPTIONS
+// --------------------------------------
 builder.Services.AddControllers()
     .AddJsonOptions(opt =>
     {
@@ -29,9 +35,29 @@ builder.Services.AddControllers()
         opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+// --------------------------------------
+// SWAGGER
+// --------------------------------------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// --------------------------------------
+// CORS (ALLOW ALL)
+// --------------------------------------
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+    );
+});
+
+// --------------------------------------
+// DEPENDENCY INJECTION
+// --------------------------------------
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<CookieService>();
 builder.Services.AddScoped<JwtService>();
@@ -43,17 +69,21 @@ builder.Services.AddScoped<LocationService>();
 builder.Services.AddScoped<LocationRepository>();
 builder.Services.AddScoped<TokenRepository>();
 builder.Services.AddSingleton<EmailService>();
-builder.Services.AddScoped<TokenService>(); 
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<PropertyClientService>();
 builder.Services.AddScoped<PropertyAdminRepository>();
 builder.Services.AddScoped<PropertyAdminService>();
-
 builder.Services.AddScoped<PropertyClientRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<SOA.features.auth.utils.UserContextService>();
 builder.Services.AddScoped<UserContextService>();
 
+// --------------------------------------
+// JWT
+// --------------------------------------
+#pragma warning disable CS8604 // Posible argumento de referencia nulo
 var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]);
+#pragma warning restore CS8604 // Posible argumento de referencia nulo
 
 builder.Services.AddAuthentication(options =>
 {
@@ -79,9 +109,8 @@ builder.Services.AddAuthentication(options =>
         {
             var token = context.Request.Cookies["TOKEN"];
             if (!string.IsNullOrEmpty(token))
-            {
                 context.Token = token;
-            }
+
             return Task.CompletedTask;
         }
     };
@@ -89,6 +118,9 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// --------------------------------------
+// BUILD APP
+// --------------------------------------
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -98,7 +130,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseMiddleware<ExceptionMiddleware>();
+
+// CORS VA AQUÍ (fuera del JWT)
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

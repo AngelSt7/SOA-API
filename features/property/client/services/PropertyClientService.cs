@@ -23,7 +23,7 @@ namespace SOA.features.property.client.services
             _paginationService = paginationService;
         }
 
-        public async Task<PropertyClientSingleResponseDto?> GetOne(Guid id)
+        public async Task<PropertyClientSingleResponseDto?> GetOne(String id)
         {
             return await _repository.FindOneAsync(id);
         }
