@@ -73,7 +73,7 @@ namespace SOA.features.auth.services
                 Slug = slug,
                 UpdatedAt = DateTime.UtcNow,
 
-                Services = updateDto.ServicesId ?? dto.Services
+                Services = updateDto.ServicesId ?? dto.ServicesId
             };
         }
 

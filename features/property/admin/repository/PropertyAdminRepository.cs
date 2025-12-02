@@ -53,9 +53,7 @@ namespace SOA.features.property.admin.repository
                     Phone = p.Phone,
                     ExtraInfo = p.ExtraInfo,
 
-                    DistrictId = p.Location != null ? p.Location.DistrictId ?? Guid.Empty : Guid.Empty,
-                    ProvinceId = p.Location != null ? p.Location.ProvinceId ?? Guid.Empty : Guid.Empty,
-                    DepartmentId = p.Location != null ? p.Location.DepartmentId ?? Guid.Empty : Guid.Empty,
+                    LocationId = p.LocationId,
 
                     Bathrooms = p.ResidentialProperty != null ? p.ResidentialProperty.Bathrooms : null,
                     Bedrooms = p.ResidentialProperty != null ? p.ResidentialProperty.Bedrooms : null,
@@ -73,7 +71,7 @@ namespace SOA.features.property.admin.repository
                     PropertyType = p.PropertyType,
                     PropertyCategory = p.PropertyCategory,
                     CreatedAt = p.CreatedAt,
-                    Services = p.ServicesToProperties
+                    ServicesId = p.ServicesToProperties
                         .Select(s => s.ServiceId)
                     .ToList(),
                 })

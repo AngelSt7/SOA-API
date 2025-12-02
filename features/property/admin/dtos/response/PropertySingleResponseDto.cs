@@ -12,9 +12,7 @@ namespace SOA.features.property.admin.dtos.response
         public string Address { get; set; } = null!;
         public string Description { get; set; } = null!;
 
-        public Guid DistrictId { get; set; }
-        public Guid ProvinceId { get; set; }
-        public Guid DepartmentId { get; set; }
+        public Guid LocationId { get; set; }
 
         public bool Availability { get; set; }
 
@@ -30,7 +28,7 @@ namespace SOA.features.property.admin.dtos.response
         public int? ParkingSpaces { get; set; }
         public int Floor { get; set; }
 
-        public List<Guid> Services { get; set; } = new();
+        public List<Guid> ServicesId { get; set; } = new();
         public Currency Currency { get; set; }
         public PropertyType PropertyType { get; set; }
         public PropertyCategory PropertyCategory { get; set; }
