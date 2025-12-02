@@ -17,8 +17,8 @@
             context.Response.Cookies.Append("TOKEN", token, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = secureOnly && context.Request.IsHttps,
-                SameSite = SameSiteMode.Strict,
+                Secure = false,      
+                SameSite = SameSiteMode.Lax, 
                 Expires = DateTime.UtcNow.AddMinutes(expireMinutes)
             });
         }
